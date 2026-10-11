@@ -102,7 +102,7 @@ export function Navbar() {
 								href={content.cta.href}
 								className={buttonVariants({
 									size: "lg",
-									className: "hidden md:inline-flex",
+									className: "hidden md:inline-flex px-3 py-1.5",
 								})}
 							>
 								{content.cta.label}
