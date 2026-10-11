@@ -62,7 +62,7 @@ export function Hero() {
     <MotionConfig reducedMotion="user">
       <section
         aria-labelledby="hero-heading"
-        className="relative isolate overflow-x-clip pt-12 pb-20 sm:pt-16 md:pt-16 lg:pb-28"
+        className="relative isolate overflow-x-clip pt-12 pb-16 sm:pt-16 md:pb-20"
       >
         {/* Soft warm wash behind the product visual */}
         <div
