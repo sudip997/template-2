@@ -1,3 +1,4 @@
+import { Bento } from "@/components/bento/bento";
 import { Hero } from "@/components/hero/hero";
 import { LogoCloud } from "@/components/logo-cloud/logo-cloud";
 import { Navbar } from "@/components/navbar/navbar";
@@ -9,6 +10,7 @@ export default function Home() {
 			<main>
 				<Hero />
 				<LogoCloud />
+				<Bento />
 			</main>
 		</>
 	);
