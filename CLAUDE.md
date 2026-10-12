@@ -42,10 +42,8 @@ Avoid making the design feel:
 
 - excessive overly flashy
 - childish
-- excessively colorful
 - overly futuristic
 - filled with excessive glassmorphism
-- overly animated
 - generic AI-startup style
 
 The design should look suitable for:
@@ -446,10 +444,9 @@ Good examples:
 Avoid:
 
 - excessive bouncing
-- constant movement
 - unnecessary rotations
 - every element animating independently
-- distracting infinite animations
+- distracting animations
 
 The design should still look good when animations are disabled.
 
@@ -492,8 +489,7 @@ Before implementing a section, determine:
 1. What is this section communicating?
 2. What is the primary visual focus?
 3. What should the user notice first?
-4. How does this section differ visually from the previous section?
-5. Does it contribute something new to the page?
+4. Does it contribute something new to the page?
 
 Do not create sections that simply repeat:
 
@@ -569,8 +565,6 @@ Interactive elements must be keyboard accessible.
 
 Maintain sufficient color contrast.
 
-Do not rely only on color to communicate important information.
-
 ---
 
 # 16. Code Quality
@@ -628,7 +622,7 @@ Keep class names readable.
 
 Use existing design tokens and CSS variables when available.
 
-Do not introduce arbitrary colors everywhere.
+Do not introduce arbitrary colors everywhere unless they are genuinely required for the design.
 
 Prefer the established color system.
 
@@ -744,7 +738,7 @@ The most important goal is:
 
 > Build a premium SaaS template that feels cohesive, distinctive, calm, modern, and commercially usable.
 
-Do not optimize for maximum visual effects.
+Do not optimize for excessive visual effects.
 
 Optimize for:
 
