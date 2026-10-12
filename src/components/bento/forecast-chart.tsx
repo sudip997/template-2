@@ -25,7 +25,7 @@ export type ForecastPoint = {
   spread: number;
 };
 
-type Point = { x: number; y: number };
+export type Point = { x: number; y: number };
 
 type ForecastChartProps = {
   actual: ActualPoint[];
@@ -56,7 +56,7 @@ function round(value: number) {
  * Pass `startWithMove = false` to continue an existing path instead of
  * starting a new one, which is how the confidence band is closed.
  */
-function buildLinePath(points: Point[], startWithMove = true) {
+export function buildLinePath(points: Point[], startWithMove = true) {
   let d = `${startWithMove ? "M" : "L"} ${round(points[0].x)} ${round(points[0].y)}`;
 
   for (let i = 0; i < points.length - 1; i++) {
