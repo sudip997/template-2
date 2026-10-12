@@ -3,6 +3,7 @@
 import { motion, MotionConfig } from "motion/react";
 import { Container } from "@/components/container";
 import { ForecastCard } from "./forecast-card";
+import { IntegrationsCard } from "./integrations-card";
 import { fadeUp, stagger } from "./motion";
 
 /* -------------------------------------------------------------------------- */
@@ -81,6 +82,7 @@ export function Bento() {
             className="mt-12 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:mt-16 lg:grid-cols-12"
           >
             <ForecastCard className="sm:col-span-2 lg:col-span-7" />
+            <IntegrationsCard className="lg:col-span-5" />
           </motion.div>
         </Container>
       </section>
