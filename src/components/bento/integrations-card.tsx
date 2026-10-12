@@ -214,8 +214,10 @@ export function IntegrationsCard({ className }: { className?: string }) {
                 >
                   <span
                     className={cn(
-                      "flex size-10 items-center justify-center rounded-xl border bg-card text-primary transition-colors duration-300",
-                      active && "border-primary/40",
+                      "flex size-10 items-center justify-center rounded-xl border bg-card transition-colors duration-300",
+                      active
+                        ? "border-highlight/50 text-highlight"
+                        : "text-primary",
                     )}
                   >
                     <SourceIcon className="size-5" stroke={1.75} />
