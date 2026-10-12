@@ -50,16 +50,18 @@ const sources: Source[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  Timing (seconds). The sequence plays once when the card scrolls into view. */
+/*  Timing (seconds). Connectors draw in once; signals then flow continuously */
+/*  while the card is on screen. One flow takes DURATION + REPEAT_DELAY, and  */
+/*  STEP spreads the sources across that period so there is always a gentle   */
+/*  trickle of signals rather than a burst.                                   */
 /* -------------------------------------------------------------------------- */
 
 const LINE_START = 0.3; // first connector begins drawing
 const LINE_STEP = 0.08; // delay between connectors
 const PULSE_START = 1.2; // first signal leaves its source
-const PULSE_STEP = 0.25; // delay between signals
-const PULSE_DURATION = 0.9;
-const SETTLE_DELAY =
-  PULSE_START + (sources.length - 1) * PULSE_STEP + PULSE_DURATION;
+const PULSE_STEP = 0.5; // delay between signals
+const PULSE_DURATION = 2.6; // time to travel from a source to the hub
+const PULSE_REPEAT_DELAY = 0.6; // rest before a source sends its next signal
 
 /* -------------------------------------------------------------------------- */
 /*  Component                                                                 */
@@ -68,6 +70,9 @@ const SETTLE_DELAY =
 export function IntegrationsCard({ className }: { className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, amount: 0.4 });
+  // Unlike `inView`, this follows the card in and out of the viewport, so the
+  // signals only run while someone can actually see them.
+  const onScreen = useInView(ref, { amount: 0.1 });
   const reduceMotion = useReducedMotion();
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -139,10 +144,15 @@ export function IntegrationsCard({ className }: { className?: string }) {
             })}
           </svg>
 
-          {/* Signals: one small dot travels from each source to the hub, once. */}
+          {/* Signals: a small dot keeps travelling from each source to the hub. */}
           {!reduceMotion &&
             sources.map((source, index) => {
-              const delay = PULSE_START + index * PULSE_STEP;
+              const flow = {
+                duration: PULSE_DURATION,
+                delay: PULSE_START + index * PULSE_STEP,
+                repeat: Infinity,
+                repeatDelay: PULSE_REPEAT_DELAY,
+              };
               return (
                 <motion.span
                   key={source.id}
@@ -153,22 +163,18 @@ export function IntegrationsCard({ className }: { className?: string }) {
                     top: `${source.y}%`,
                   }}
                   animate={
-                    show
+                    show && onScreen
                       ? {
                           left: [`${source.x}%`, "50%"],
                           top: [`${source.y}%`, "50%"],
                           opacity: [0, 1, 1, 0],
                         }
-                      : undefined
+                      : { opacity: 0 }
                   }
                   transition={{
-                    left: { duration: PULSE_DURATION, delay, ease: "easeInOut" },
-                    top: { duration: PULSE_DURATION, delay, ease: "easeInOut" },
-                    opacity: {
-                      duration: PULSE_DURATION,
-                      delay,
-                      times: [0, 0.2, 0.8, 1],
-                    },
+                    left: { ...flow, ease: "linear" },
+                    top: { ...flow, ease: "linear" },
+                    opacity: { ...flow, ease: "linear", times: [0, 0.15, 0.85, 1] },
                   }}
                 />
               );
@@ -185,24 +191,6 @@ export function IntegrationsCard({ className }: { className?: string }) {
               <span className="flex size-7 items-center justify-center rounded-full border border-primary-foreground/25">
                 <span className="size-2.5 rounded-full bg-highlight" />
               </span>
-
-              {/* One soft ring when the last signal arrives */}
-              {!reduceMotion && (
-                <motion.span
-                  className="absolute inset-0 rounded-2xl border border-highlight"
-                  initial={{ opacity: 0, scale: 1 }}
-                  animate={
-                    show
-                      ? { opacity: [0.6, 0], scale: [1, 1.6] }
-                      : { opacity: 0, scale: 1 }
-                  }
-                  transition={{
-                    duration: 1,
-                    delay: SETTLE_DELAY,
-                    ease: EASE_OUT,
-                  }}
-                />
-              )}
             </motion.div>
           </div>
 
@@ -226,10 +214,8 @@ export function IntegrationsCard({ className }: { className?: string }) {
                 >
                   <span
                     className={cn(
-                      "flex size-10 items-center justify-center rounded-xl border bg-card transition-colors duration-300",
-                      active
-                        ? "border-foreground/25 text-foreground"
-                        : "text-muted-foreground",
+                      "flex size-10 items-center justify-center rounded-xl border bg-card text-primary transition-colors duration-300",
+                      active && "border-primary/40",
                     )}
                   >
                     <SourceIcon className="size-5" stroke={1.75} />
