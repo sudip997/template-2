@@ -85,11 +85,11 @@ const SPARK_MAX = 119;
 /*  Timing (seconds), measured from when the card scrolls into view.          */
 /* -------------------------------------------------------------------------- */
 
-const COMMENT_START = 0.5; // first comment fades in
-const COMMENT_STEP = 0.5; // delay between the first two comments
-const TYPING_AT = 2.4; // "Priya is typing"
-const REPLY_AT = 4.0; // her reply arrives
-const RESOLVE_AT = 4.8; // thread is marked resolved
+const COMMENT_START = 0.7; // first comment fades in
+const COMMENT_STEP = 0.9; // delay between the first two comments
+const TYPING_AT = 3.4; // "Priya is typing"
+const REPLY_AT = 5.4; // her reply arrives
+const RESOLVE_AT = 6.6; // thread is marked resolved
 
 /* -------------------------------------------------------------------------- */
 /*  Helpers                                                                   */
@@ -109,7 +109,7 @@ const anchor = sparkPoints[ANCHOR_INDEX];
 
 export function CollaborationCard({ className }: { className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.3 });
+  const inView = useInView(ref, { once: true, amount: 0.5 });
   const reduceMotion = useReducedMotion();
 
   // The thread plays a short story once (typing, reply, resolved). Pressing
@@ -206,7 +206,7 @@ export function CollaborationCard({ className }: { className?: string }) {
                 fill="url(#bento-collab-spark-area)"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: show ? 1 : 0 }}
-                transition={tween(0.8, 0.5)}
+                transition={tween(1.0, 0.7)}
               />
               <motion.path
                 d={sparkLine}
@@ -217,7 +217,7 @@ export function CollaborationCard({ className }: { className?: string }) {
                 strokeLinejoin="round"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: show ? 1 : 0 }}
-                transition={tween(1.1, 0.15)}
+                transition={tween(1.6, 0.2)}
               />
             </svg>
 
@@ -230,7 +230,7 @@ export function CollaborationCard({ className }: { className?: string }) {
               }}
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: show ? 1 : 0, scale: show ? 1 : 0.5 }}
-              transition={tween(0.4, 0.9)}
+              transition={tween(0.5, 1.4)}
             />
             <motion.span
               className="absolute flex size-4 -translate-x-1/2 -translate-y-full items-center justify-center rounded-full border border-highlight/40 bg-highlight-soft text-[0.625rem] leading-none font-semibold text-highlight-foreground"
@@ -240,7 +240,7 @@ export function CollaborationCard({ className }: { className?: string }) {
               }}
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: show ? 1 : 0, y: show ? 0 : 4 }}
-              transition={tween(0.4, 1.05)}
+              transition={tween(0.5, 1.6)}
             >
               <motion.span
                 key={resolved ? "resolved" : commentCount}
@@ -306,7 +306,7 @@ export function CollaborationCard({ className }: { className?: string }) {
               className="relative flex gap-3 pb-5"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: show ? 1 : 0, y: show ? 0 : 10 }}
-              transition={tween(0.5, COMMENT_START + index * COMMENT_STEP)}
+              transition={tween(0.8, COMMENT_START + index * COMMENT_STEP)}
             >
               {/* Line that links this comment to the next */}
               <span
@@ -340,7 +340,7 @@ export function CollaborationCard({ className }: { className?: string }) {
               className="flex"
               initial={{ opacity: 0 }}
               animate={{ opacity: typing || replied ? 1 : 0 }}
-              transition={tween(0.3)}
+              transition={tween(0.45)}
             >
               <Avatar initials={reply.initials} tone={reply.tone} />
             </motion.span>
@@ -351,7 +351,7 @@ export function CollaborationCard({ className }: { className?: string }) {
                 aria-hidden={!replied}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: replied ? 1 : 0, y: replied ? 0 : 6 }}
-                transition={tween(0.4)}
+                transition={tween(0.6)}
               >
                 <p className="flex items-baseline gap-2 text-xs">
                   <span className="font-semibold">{reply.name}</span>
@@ -367,7 +367,7 @@ export function CollaborationCard({ className }: { className?: string }) {
                 aria-hidden="true"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: typing ? 1 : 0 }}
-                transition={tween(0.3)}
+                transition={tween(0.45)}
               >
                 <span>{reply.name.split(" ")[0]} is typing</span>
                 <span className="flex items-center gap-1">
@@ -377,8 +377,8 @@ export function CollaborationCard({ className }: { className?: string }) {
                       className="size-1 rounded-full bg-muted-foreground"
                       animate={typing ? { opacity: [0.25, 1, 0.25] } : undefined}
                       transition={{
-                        duration: 1.2,
-                        delay: dot * 0.18,
+                        duration: 1.5,
+                        delay: dot * 0.22,
                         repeat: Infinity,
                       }}
                     />

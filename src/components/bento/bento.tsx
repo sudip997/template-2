@@ -75,17 +75,11 @@ export function Bento() {
               Row 2: Collaboration (5)     | Automation (7)
             Tablet: two columns, wide cards span both. Mobile: one column.
           */}
-          <motion.div
-            variants={stagger}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, amount: 0.1 }}
-            className="mt-12 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:mt-16 lg:grid-cols-12"
-          >
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 sm:gap-5 lg:mt-16 lg:grid-cols-12">
             <ForecastCard className="sm:col-span-2 lg:col-span-7" />
             <IntegrationsCard className="lg:col-span-5" />
             <CollaborationCard className="lg:col-span-5" />
-          </motion.div>
+          </div>
         </Container>
       </section>
     </MotionConfig>

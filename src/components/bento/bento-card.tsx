@@ -19,8 +19,8 @@ type BentoCardProps = {
  * Shared shell for every bento card: border, background, icon chip, title and
  * description. Each card supplies its own visual as `children`.
  *
- * Reveals through the `fadeUp` variant, so it must sit inside a parent motion
- * element that uses the `stagger` variant (see `bento.tsx`).
+ * Each card reveals itself with `whileInView`, so a card lower in the grid fades
+ * in when it is scrolled to, not when the top of the grid appears.
  */
 export function BentoCard({
   icon: CardIcon,
@@ -34,6 +34,9 @@ export function BentoCard({
   return (
     <motion.article
       variants={fadeUp}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, amount: 0.15 }}
       aria-labelledby={titleId}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border bg-card text-card-foreground transition-colors duration-300 hover:border-foreground/25",
