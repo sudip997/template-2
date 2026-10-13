@@ -5,15 +5,15 @@ import { LogoCloud } from "@/components/logo-cloud/logo-cloud";
 import { Navbar } from "@/components/navbar/navbar";
 
 export default function Home() {
-	return (
-		<>
-			<Navbar />
-			<main>
-				<Hero />
-				<LogoCloud />
-				<Features />
-				<Bento />
-			</main>
-		</>
-	);
+  return (
+    <>
+      <Navbar />
+      <main>
+        <Hero />
+        <LogoCloud />
+        <Bento />
+        <Features />
+      </main>
+    </>
+  );
 }
