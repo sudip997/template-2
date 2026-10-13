@@ -39,10 +39,16 @@ export function BentoCard({
       viewport={{ once: true, amount: 0.15 }}
       aria-labelledby={titleId}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-2xl border bg-card text-card-foreground transition-colors duration-300 hover:border-foreground/25",
+        "group relative isolate flex flex-col overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-sm transition-[border-color,box-shadow] duration-300 hover:border-foreground/25 hover:shadow-md",
         className,
       )}
     >
+      {/* Soft warm glow in the corner, behind the text */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-28 -right-28 -z-10 size-72 rounded-full bg-highlight-soft/70 blur-3xl dark:bg-highlight-soft/30"
+      />
+
       <header className="p-6 sm:p-8">
         <span
           aria-hidden="true"

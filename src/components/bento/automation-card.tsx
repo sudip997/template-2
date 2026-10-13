@@ -3,18 +3,18 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import {
-  IconBell,
   IconBellRinging,
   IconBolt,
   IconCheck,
   IconChecklist,
-  IconClock,
   IconFilter,
+  IconMail,
   IconRefresh,
   type Icon,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { BentoCard } from "./bento-card";
+import { FlowStreak } from "./flow-streak";
 import { EASE_OUT } from "./motion";
 
 /* -------------------------------------------------------------------------- */
@@ -29,10 +29,15 @@ const content = {
     name: "Retention drop alert",
     meta: "Checked hourly · last run 2 min ago",
   },
+  stats: [
+    { label: "Active rules", value: "12" },
+    { label: "Runs this month", value: "1,284" },
+    { label: "Median alert time", value: "38s" },
+  ],
   trigger: {
     label: "When",
-    text: "Net retention is recalculated",
-    schedule: "Every hour",
+    text: "Every hour",
+    detail: "Net retention is recalculated",
   },
   condition: {
     label: "If",
@@ -42,58 +47,103 @@ const content = {
     healthy: { value: "118%", status: "Not met" },
     breached: { value: "108%", status: "Condition met" },
   },
-  actions: {
-    label: "Then",
-    items: [
-      {
-        icon: IconBell,
-        text: "Send an alert to",
-        target: "#revenue",
-        done: "Sent",
-      },
-      {
-        icon: IconChecklist,
-        text: "Create a task for",
-        target: "Finance",
-        done: "Created",
-      },
-    ],
-  },
+  actionsLabel: "Then",
+  actions: [
+    { icon: IconBellRinging, title: "Alert #revenue", status: "Sent" },
+    { icon: IconChecklist, title: "Task for Finance", status: "Created" },
+    { icon: IconMail, title: "Weekly digest", status: "Queued" },
+  ],
   toast: {
     title: "Net retention fell below 110%",
-    body: "Now at 108%, down 2.0 pt this week. #revenue was notified and a task was created for Finance.",
+    body: "Now at 108%, down 2.0 pt this week. #revenue was alerted and a task was created for Finance.",
     time: "now",
   },
   /** Read by screen readers instead of the animated walkthrough. */
   summary:
-    "Example automation: every hour, when net retention drops below 110%, send an alert to #revenue and create a task for Finance.",
+    "Example automation: every hour, when net retention drops below 110%, alert #revenue, create a task for Finance and schedule a weekly digest.",
 } as const;
 
 /* -------------------------------------------------------------------------- */
 /*  Timing                                                                    */
 /*                                                                            */
 /*  The walkthrough loops while the card is on screen. Stage 0 is the quiet   */
-/*  start, stages 1 to 3 light up each step in turn, and stage 4 shows the    */
-/*  notification before the loop begins again. Values are in seconds.         */
+/*  start, stages 1 to 3 light up the trigger, the condition and the actions, */
+/*  and stage 4 shows the notification before the loop begins again.          */
+/*  Gradients flow down the connectors near the end of the stage before the   */
+/*  step they lead to, so they arrive just as it lights up. Values are in     */
+/*  seconds.                                                                  */
 /* -------------------------------------------------------------------------- */
 
-const STAGE_SECONDS = [1.8, 1.6, 2.2, 2.4, 3.6];
+const STAGE_SECONDS = [1.8, 2.0, 3.2, 2.4, 3.6];
 const LAST_STAGE = STAGE_SECONDS.length - 1;
-/**
- * Time a signal takes to cross a connector. Signals leave near the end of the
- * stage before, so they arrive just as the next step lights up.
- */
-const SIGNAL_SECONDS = 0.8;
-const signalDelay = (stage: number) => STAGE_SECONDS[stage] - SIGNAL_SECONDS;
+/** Time a gradient takes to cross the line from the trigger to the condition. */
+const TRIGGER_HOP = 0.8;
+/** Time it takes to cross each stretch of line inside the fork. */
+const HOP = 0.5;
+/** Delay inside `stage` so the last `hopsToGo` hops finish as the stage ends. */
+const hopDelay = (stage: number, hopsToGo: number) =>
+  STAGE_SECONDS[stage] - hopsToGo * HOP;
 
 /* -------------------------------------------------------------------------- */
 /*  Building blocks                                                           */
 /* -------------------------------------------------------------------------- */
 
+type TileProps = {
+  icon: Icon;
+  /** The step has been reached, so the tile turns warm. */
+  lit: boolean;
+  className?: string;
+};
+
+/** Square icon tile. A gradient fades in over the neutral base when lit. */
+function Tile({ icon: TileIcon, lit, className }: TileProps) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted text-muted-foreground transition-colors duration-500",
+        lit && "text-highlight-foreground",
+        className,
+      )}
+    >
+      <span
+        className={cn(
+          "absolute inset-0 bg-linear-to-br from-highlight-soft to-highlight/30 transition-opacity duration-500",
+          lit ? "opacity-100" : "opacity-0",
+        )}
+      />
+      <TileIcon className="relative size-[1.125rem]" stroke={1.75} />
+    </span>
+  );
+}
+
+type LineProps = {
+  /** The run has already passed through this line. */
+  lit: boolean;
+  className?: string;
+  /** A `FlowStreak`, while one is travelling. */
+  children?: ReactNode;
+};
+
+/** A 2px connector. The streak inside it is clipped to the line's length. */
+function Line({ lit, className, children }: LineProps) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        "relative block overflow-hidden transition-colors duration-500",
+        lit ? "bg-highlight/40" : "bg-border",
+        className,
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
 type StepProps = {
   icon: Icon;
   label: string;
-  /** The step has been reached in the current run. */
   reached: boolean;
   /** The step is the one being processed right now. */
   active: boolean;
@@ -102,32 +152,18 @@ type StepProps = {
   children: ReactNode;
 };
 
-function Step({
-  icon: StepIcon,
-  label,
-  reached,
-  active,
-  aside,
-  children,
-}: StepProps) {
+/** A node in the flow: icon tile, small label, and its text. */
+function Step({ icon, label, reached, active, aside, children }: StepProps) {
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-xl border bg-card p-3.5 transition-colors duration-500",
-        active ? "border-highlight/40" : "hover:border-foreground/25",
+        "flex w-full max-w-sm items-start gap-3 rounded-xl border bg-card p-3.5 shadow-sm transition-[border-color,box-shadow] duration-500",
+        active
+          ? "border-highlight/40 shadow-md shadow-highlight/10"
+          : "hover:border-foreground/25",
       )}
     >
-      <span
-        aria-hidden="true"
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors duration-500",
-          reached
-            ? "bg-highlight-soft text-highlight-foreground"
-            : "bg-muted text-muted-foreground",
-        )}
-      >
-        <StepIcon className="size-[1.125rem]" stroke={1.75} />
-      </span>
+      <Tile icon={icon} lit={reached} className="size-9" />
       <div className="min-w-0 flex-1">
         <p className="text-[0.6875rem] font-semibold tracking-widest text-muted-foreground uppercase">
           {label}
@@ -135,37 +171,6 @@ function Step({
         {children}
       </div>
       {aside && <div className="shrink-0 self-center">{aside}</div>}
-    </div>
-  );
-}
-
-type ConnectorProps = {
-  /** The run has already passed through this connector. */
-  lit: boolean;
-  /** A signal is crossing it during the current stage. */
-  travelling: boolean;
-  /** Seconds to wait inside the stage before the signal sets off. */
-  delay?: number;
-};
-
-/** Vertical line between two steps, lined up with the centre of the step icons. */
-function Connector({ lit, travelling, delay = 0 }: ConnectorProps) {
-  return (
-    <div aria-hidden="true" className="relative h-6">
-      <span
-        className={cn(
-          "absolute inset-y-0 left-8.25 w-px -translate-x-1/2 transition-colors duration-500",
-          lit ? "bg-highlight/50" : "bg-border",
-        )}
-      />
-      {travelling && (
-        <motion.span
-          className="absolute left-8.25 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-highlight"
-          initial={{ top: "0%", opacity: 0 }}
-          animate={{ top: "100%", opacity: [0, 1, 1, 0] }}
-          transition={{ duration: SIGNAL_SECONDS, delay, ease: "easeInOut" }}
-        />
-      )}
     </div>
   );
 }
@@ -208,6 +213,9 @@ export function AutomationCard({ className }: { className?: string }) {
   const reading = breached
     ? content.condition.breached
     : content.condition.healthy;
+  /** True while gradients should be flowing during `stageNumber`. */
+  const flowsIn = (stageNumber: number) =>
+    !reduceMotion && current === stageNumber;
 
   const toggle = () => {
     setEnabled((value) => !value);
@@ -226,7 +234,7 @@ export function AutomationCard({ className }: { className?: string }) {
         ref={ref}
         role="group"
         aria-label="Automation rule preview"
-        className="mx-6 flex flex-1 flex-col rounded-t-xl border border-b-0 bg-background sm:mx-8"
+        className="mx-6 flex flex-1 flex-col rounded-t-xl border border-b-0 bg-linear-to-b from-background to-muted/40 shadow-sm sm:mx-8"
       >
         {/* Rule header with an on/off switch */}
         <div className="flex items-center justify-between gap-3 border-b px-4 py-3.5 sm:px-5">
@@ -271,16 +279,31 @@ export function AutomationCard({ className }: { className?: string }) {
           </button>
         </div>
 
+        {/* Numbers for the whole workspace, in the same style as the hero */}
+        <dl className="grid grid-cols-3 divide-x divide-border border-b">
+          {content.stats.map((stat) => (
+            <div key={stat.label} className="min-w-0 px-3 py-3 sm:px-5">
+              <dt className="truncate text-xs text-muted-foreground">
+                {stat.label}
+              </dt>
+              <dd className="mt-0.5 font-heading text-lg font-semibold tracking-tight tabular-nums sm:text-xl">
+                {stat.value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
         <p className="sr-only">{content.summary}</p>
 
-        {/* Steps */}
-        <ol
+        {/* The workflow: trigger, condition, then a fork into three actions */}
+        <div
           className={cn(
-            "px-4 pt-5 transition-opacity duration-500 sm:px-5",
+            "flex flex-col items-center px-4 pt-6 transition-opacity duration-500 sm:px-5",
             !enabled && "opacity-60",
           )}
         >
-          <motion.li
+          <motion.div
+            className="flex w-full justify-center"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: show ? 1 : 0, y: show ? 0 : 12 }}
             transition={tween(0.7, 0.1)}
@@ -290,33 +313,32 @@ export function AutomationCard({ className }: { className?: string }) {
               label={content.trigger.label}
               reached={current >= 1}
               active={current === 1}
-              aside={
-                <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs text-muted-foreground">
-                  <IconClock
-                    className="size-3.5"
-                    stroke={1.75}
-                    aria-hidden="true"
-                  />
-                  {content.trigger.schedule}
-                </span>
-              }
             >
-              <p className="mt-1 text-sm">{content.trigger.text}</p>
+              <p className="mt-0.5 text-sm font-medium">
+                {content.trigger.text}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {content.trigger.detail}
+              </p>
             </Step>
-          </motion.li>
+          </motion.div>
 
-          <li aria-hidden="true">
-            <Connector
-              lit={current >= 2}
-              travelling={!reduceMotion && current === 1}
-              delay={signalDelay(1)}
-            />
-          </li>
+          <Line lit={current >= 2} className="h-6 w-0.5">
+            {flowsIn(1) && (
+              <FlowStreak
+                axis="y"
+                loop={false}
+                duration={TRIGGER_HOP}
+                delay={STAGE_SECONDS[1] - TRIGGER_HOP}
+              />
+            )}
+          </Line>
 
-          <motion.li
+          <motion.div
+            className="flex w-full justify-center"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: show ? 1 : 0, y: show ? 0 : 12 }}
-            transition={tween(0.7, 0.4)}
+            transition={tween(0.7, 0.35)}
           >
             <Step
               icon={IconFilter}
@@ -353,86 +375,130 @@ export function AutomationCard({ className }: { className?: string }) {
                 </div>
               }
             >
-              <p className="mt-1 text-sm">
+              <p className="mt-0.5 text-sm">
                 {content.condition.text}{" "}
                 <span className="rounded-md border bg-background px-1.5 py-0.5 text-xs font-medium tabular-nums">
                   {content.condition.threshold}
                 </span>
               </p>
             </Step>
-          </motion.li>
+          </motion.div>
 
-          <li aria-hidden="true">
-            <Connector
-              lit={current >= 3}
-              travelling={!reduceMotion && current === 2}
-              delay={signalDelay(2)}
-            />
-          </li>
+          {/* Trunk down from the condition */}
+          <Line lit={current >= 3} className="h-5 w-0.5">
+            {flowsIn(2) && (
+              <FlowStreak
+                axis="y"
+                loop={false}
+                duration={HOP}
+                delay={hopDelay(2, 4)}
+              />
+            )}
+          </Line>
 
-          <motion.li
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: show ? 1 : 0, y: show ? 0 : 12 }}
-            transition={tween(0.7, 0.7)}
-          >
-            <Step
-              icon={IconBellRinging}
-              label={content.actions.label}
-              reached={current >= 3}
-              active={current === 3}
-            >
-              <ul className="mt-1 divide-y">
-                {content.actions.items.map((item, index) => {
-                  const ActionIcon = item.icon;
-                  const done = current >= 3;
-                  return (
-                    <li
-                      key={item.target}
-                      className="flex items-center gap-2.5 py-2 first:pt-1 last:pb-0.5"
+          {/*
+            The fork. Each cell draws its own part of the bar and its own stub,
+            so the lines line up with the three actions at any width.
+          */}
+          <ul className="grid w-full grid-cols-3">
+            {content.actions.map((action, index) => {
+              const first = index === 0;
+              const last = index === content.actions.length - 1;
+              const middle = !first && !last;
+              const ActionIcon = action.icon;
+              const done = current >= 3;
+
+              return (
+                <motion.li
+                  key={action.title}
+                  className="relative min-w-0 pt-6"
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: show ? 1 : 0, y: show ? 0 : 12 }}
+                  transition={tween(0.7, 0.6 + index * 0.12)}
+                >
+                  {/* Bar, flowing outwards from the centre of the fork */}
+                  {(middle || last) && (
+                    <Line
+                      lit={current >= 3}
+                      className="absolute top-0 left-0 h-0.5 w-1/2"
                     >
-                      <ActionIcon
-                        className="size-4 shrink-0 text-muted-foreground"
-                        stroke={1.75}
-                        aria-hidden="true"
+                      {flowsIn(2) && (
+                        <FlowStreak
+                          reverse={middle}
+                          loop={false}
+                          duration={HOP}
+                          delay={hopDelay(2, middle ? 3 : 2)}
+                        />
+                      )}
+                    </Line>
+                  )}
+                  {(middle || first) && (
+                    <Line
+                      lit={current >= 3}
+                      className="absolute top-0 left-1/2 h-0.5 w-1/2"
+                    >
+                      {flowsIn(2) && (
+                        <FlowStreak
+                          reverse={first}
+                          loop={false}
+                          duration={HOP}
+                          delay={hopDelay(2, middle ? 3 : 2)}
+                        />
+                      )}
+                    </Line>
+                  )}
+
+                  {/* Stub down to the action */}
+                  <Line
+                    lit={current >= 3}
+                    className="absolute top-0 left-1/2 h-6 w-0.5 -translate-x-1/2"
+                  >
+                    {flowsIn(2) && (
+                      <FlowStreak
+                        axis="y"
+                        loop={false}
+                        duration={HOP}
+                        delay={hopDelay(2, middle ? 3 : 1)}
                       />
-                      <p className="min-w-0 flex-1 text-sm">
-                        {item.text}{" "}
-                        <span className="rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium">
-                          {item.target}
-                        </span>
-                      </p>
-                      <span
-                        aria-hidden="true"
-                        className={cn(
-                          "inline-flex shrink-0 items-center gap-1 text-xs font-medium text-highlight-foreground transition-opacity duration-500",
-                          done ? "opacity-100" : "opacity-0",
-                        )}
-                        style={{
-                          transitionDelay: done
-                            ? `${0.6 + index * 0.7}s`
-                            : "0s",
-                        }}
-                      >
-                        <IconCheck className="size-3.5" stroke={2.5} />
-                        {item.done}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Step>
-          </motion.li>
-        </ol>
+                    )}
+                  </Line>
+
+                  <div
+                    className={cn(
+                      "mx-1 flex h-full flex-col gap-2 rounded-xl border bg-card p-2.5 shadow-sm transition-[border-color,box-shadow] duration-500 sm:mx-1.5 sm:p-3",
+                      done
+                        ? "border-highlight/40 shadow-md shadow-highlight/10"
+                        : "hover:border-foreground/25",
+                    )}
+                  >
+                    <Tile icon={ActionIcon} lit={done} className="size-8" />
+                    <p className="text-xs leading-snug font-medium sm:text-sm">
+                      {action.title}
+                    </p>
+                    <p
+                      aria-hidden="true"
+                      className={cn(
+                        "mt-auto flex items-center gap-1 text-[0.6875rem] font-medium text-highlight-foreground transition-opacity duration-500",
+                        done ? "opacity-100" : "opacity-0",
+                      )}
+                      style={{
+                        transitionDelay: done ? `${0.3 + index * 0.5}s` : "0s",
+                      }}
+                    >
+                      <IconCheck className="size-3" stroke={2.5} />
+                      {action.status}
+                    </p>
+                  </div>
+                </motion.li>
+              );
+            })}
+          </ul>
+        </div>
 
         {/* Notification. Its space is always reserved, so the card never jumps. */}
-        <div className="mt-auto px-4 pb-5 sm:px-5" aria-hidden="true">
-          <Connector
-            lit={current >= 4}
-            travelling={!reduceMotion && current === 3}
-            delay={signalDelay(3)}
-          />
+        <div className="mt-auto px-4 pt-5 pb-5 sm:px-5" aria-hidden="true">
           <motion.div
-            className="flex items-start gap-3 rounded-xl border border-highlight/30 bg-card p-3.5 shadow-sm"
+            className="flex items-start gap-3 rounded-xl border border-highlight/30 bg-linear-to-br from-card to-highlight-soft/50 p-3.5 shadow-lg shadow-black/5"
             initial={{ opacity: 0, y: 12 }}
             animate={{
               opacity: current >= 4 ? 1 : 0,
@@ -440,9 +506,7 @@ export function AutomationCard({ className }: { className?: string }) {
             }}
             transition={tween(0.7)}
           >
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-highlight-soft text-highlight-foreground">
-              <IconBellRinging className="size-[1.125rem]" stroke={1.75} />
-            </span>
+            <Tile icon={IconBellRinging} lit className="size-9" />
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-sm font-semibold">{content.toast.title}</p>

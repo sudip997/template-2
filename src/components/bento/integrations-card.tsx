@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import { motion, useInView, useReducedMotion } from "motion/react";
 import {
   IconActivity,
@@ -14,6 +14,7 @@ import {
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { BentoCard } from "./bento-card";
+import { FlowStreak } from "./flow-streak";
 import { EASE_OUT } from "./motion";
 
 /* -------------------------------------------------------------------------- */
@@ -50,18 +51,34 @@ const sources: Source[] = [
 ];
 
 /* -------------------------------------------------------------------------- */
-/*  Timing (seconds). Connectors draw in once; signals then flow continuously */
-/*  while the card is on screen. One flow takes DURATION + REPEAT_DELAY, and  */
-/*  STEP spreads the sources across that period so there is always a gentle   */
-/*  trickle of signals rather than a burst.                                   */
+/*  Timing (seconds). Connectors draw in once; a gradient then flows along    */
+/*  each one continuously while the card is on screen. One flow takes         */
+/*  DURATION + REST, and STEP spreads the sources across that period so there */
+/*  is always a gentle trickle rather than a burst.                           */
 /* -------------------------------------------------------------------------- */
 
 const LINE_START = 0.3; // first connector begins drawing
 const LINE_STEP = 0.08; // delay between connectors
-const PULSE_START = 1.2; // first signal leaves its source
-const PULSE_STEP = 0.5; // delay between signals
-const PULSE_DURATION = 2.6; // time to travel from a source to the hub
-const PULSE_REPEAT_DELAY = 0.6; // rest before a source sends its next signal
+const FLOW_START = 1.0; // first gradient leaves its source
+const FLOW_STEP = 0.45; // delay between sources
+const FLOW_DURATION = 2.4; // time a gradient takes to cross a connector
+const FLOW_REST = 0.6; // rest before a source sends its next gradient
+
+/** Width and height of an element, kept up to date as it is resized. */
+function useElementSize(ref: RefObject<HTMLElement | null>) {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setSize({ width, height });
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+  return size;
+}
 
 /* -------------------------------------------------------------------------- */
 /*  Component                                                                 */
@@ -74,6 +91,7 @@ export function IntegrationsCard({ className }: { className?: string }) {
   // signals only run while someone can actually see them.
   const onScreen = useInView(ref, { amount: 0.1 });
   const reduceMotion = useReducedMotion();
+  const size = useElementSize(ref);
   const [activeId, setActiveId] = useState<string | null>(null);
 
   // People who prefer reduced motion get the finished diagram straight away.
@@ -92,7 +110,7 @@ export function IntegrationsCard({ className }: { className?: string }) {
       <div
         role="group"
         aria-label="Connected data sources preview"
-        className="mx-6 flex flex-1 flex-col rounded-t-xl border border-b-0 bg-background sm:mx-8"
+        className="mx-6 flex flex-1 flex-col rounded-t-xl border border-b-0 bg-background shadow-sm sm:mx-8"
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b px-4 py-3 sm:px-5">
@@ -114,6 +132,9 @@ export function IntegrationsCard({ className }: { className?: string }) {
 
         {/* Diagram */}
         <div ref={ref} className="relative min-h-72 flex-1" aria-hidden="true">
+          {/* Soft warm glow behind the hub */}
+          <div className="absolute top-1/2 left-1/2 size-40 -translate-x-1/2 -translate-y-1/2 rounded-full bg-highlight-soft blur-2xl dark:bg-highlight-soft/70" />
+
           {/* Connectors. Straight lines, so the stretched viewBox never distorts them. */}
           <svg
             viewBox="0 0 100 100"
@@ -144,46 +165,44 @@ export function IntegrationsCard({ className }: { className?: string }) {
             })}
           </svg>
 
-          {/* Signals: a small dot keeps travelling from each source to the hub. */}
+          {/*
+            Gradient flow. Each streak rides on a thin line laid exactly over its
+            connector, so it needs the diagram's pixel size to get the length
+            and angle right.
+          */}
           {!reduceMotion &&
+            show &&
+            onScreen &&
+            size.width > 0 &&
             sources.map((source, index) => {
-              const flow = {
-                duration: PULSE_DURATION,
-                delay: PULSE_START + index * PULSE_STEP,
-                repeat: Infinity,
-                repeatDelay: PULSE_REPEAT_DELAY,
-              };
+              const x = (source.x / 100) * size.width;
+              const y = (source.y / 100) * size.height;
+              const dx = size.width / 2 - x;
+              const dy = size.height / 2 - y;
               return (
-                <motion.span
+                <div
                   key={source.id}
-                  className="absolute z-10 size-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-highlight"
-                  initial={{
-                    opacity: 0,
-                    left: `${source.x}%`,
-                    top: `${source.y}%`,
+                  className="pointer-events-none absolute z-10 h-0.5 origin-left overflow-hidden rounded-full"
+                  style={{
+                    left: x,
+                    top: y - 1,
+                    width: Math.hypot(dx, dy),
+                    transform: `rotate(${Math.atan2(dy, dx)}rad)`,
                   }}
-                  animate={
-                    show && onScreen
-                      ? {
-                          left: [`${source.x}%`, "50%"],
-                          top: [`${source.y}%`, "50%"],
-                          opacity: [0, 1, 1, 0],
-                        }
-                      : { opacity: 0 }
-                  }
-                  transition={{
-                    left: { ...flow, ease: "linear" },
-                    top: { ...flow, ease: "linear" },
-                    opacity: { ...flow, ease: "linear", times: [0, 0.15, 0.85, 1] },
-                  }}
-                />
+                >
+                  <FlowStreak
+                    duration={FLOW_DURATION}
+                    delay={FLOW_START + index * FLOW_STEP}
+                    restBetween={FLOW_REST}
+                  />
+                </div>
               );
             })}
 
           {/* Hub */}
           <div className="absolute top-1/2 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
             <motion.div
-              className="relative flex size-16 items-center justify-center rounded-2xl bg-primary ring-8 ring-background"
+              className="relative flex size-16 items-center justify-center rounded-2xl bg-linear-to-b from-primary to-primary-hover shadow-lg shadow-black/15 ring-1 ring-primary-foreground/10 ring-inset"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: show ? 1 : 0, scale: show ? 1 : 0.9 }}
               transition={tween(0.6)}
@@ -214,9 +233,9 @@ export function IntegrationsCard({ className }: { className?: string }) {
                 >
                   <span
                     className={cn(
-                      "flex size-10 items-center justify-center rounded-xl border bg-card transition-colors duration-300",
+                      "flex size-10 items-center justify-center rounded-xl border bg-card shadow-sm transition-[color,border-color,box-shadow] duration-300",
                       active
-                        ? "border-highlight/50 text-highlight"
+                        ? "border-highlight/50 text-highlight shadow-md shadow-highlight/10"
                         : "text-primary",
                     )}
                   >
