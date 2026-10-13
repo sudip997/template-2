@@ -28,7 +28,7 @@ type FlowStreakProps = {
 export function FlowStreak({
   axis = "x",
   reverse = false,
-  duration = 2.4,
+  duration = 1.4,
   delay = 0,
   restBetween = 0.6,
   loop = true,

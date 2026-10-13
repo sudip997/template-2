@@ -44,10 +44,10 @@ export function BentoCard({
       )}
     >
       {/* Soft warm glow in the corner, behind the text */}
-      <div
+      {/* <div
         aria-hidden="true"
         className="pointer-events-none absolute -top-28 -right-28 -z-10 size-72 rounded-full bg-highlight-soft/70 blur-3xl dark:bg-highlight-soft/30"
-      />
+      /> */}
 
       <header className="p-6 sm:p-8">
         <span
