@@ -29,7 +29,7 @@ export function Bento() {
     // `reducedMotion="user"` turns off movement for people who prefer less motion.
     <MotionConfig reducedMotion="user">
       <section
-        id="features"
+        id="platform"
         aria-labelledby="bento-heading"
         className="scroll-mt-20 py-20 sm:py-24 lg:py-28"
       >
