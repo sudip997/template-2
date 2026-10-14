@@ -1,23 +1,22 @@
 import type { Variants } from "motion/react";
 import { EASE_OUT } from "@/components/hero/motion";
 
-/** Parent variant: reveals its children one after another. */
-export const stagger: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.12, delayChildren: 0.05 } },
-};
+export { EASE_OUT };
 
-/** Child variant: soft fade with a small upward movement. */
+/** Soft fade with a small upward movement. Used once per block, not per element. */
 export const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE_OUT } },
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE_OUT } },
 };
 
 /**
- * Connector line that draws downward from one step to the next.
- * Used with `originY: 0` so it grows from the top.
+ * Transition helper for the step previews. People who prefer reduced motion
+ * get an instant change instead of a tween.
  */
-export const drawLine: Variants = {
-  hidden: { scaleY: 0 },
-  show: { scaleY: 1, transition: { duration: 0.7, ease: EASE_OUT } },
-};
+export function tween(
+  reduceMotion: boolean | null,
+  duration: number,
+  delay = 0,
+) {
+  return reduceMotion ? { duration: 0 } : { duration, delay, ease: EASE_OUT };
+}
