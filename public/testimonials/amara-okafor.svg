@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" role="img" aria-label="Illustrated portrait">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#EFE3CC"/>
+      <stop offset="1" stop-color="#DCCBAA"/>
+    </linearGradient>
+    <linearGradient id="light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".12"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="500" fill="url(#bg)"/>
+  <circle cx="300" cy="120" r="150" fill="#fff" opacity=".22"/>
+  <!-- hair volume behind head -->
+  <ellipse cx="200" cy="178" rx="96" ry="84" fill="#1C1410"/>
+  <!-- shoulders / blazer -->
+  <path d="M30 500 C30 405 105 352 200 352 C295 352 370 405 370 500 Z" fill="#1F2937"/>
+  <path d="M158 352 L200 440 L242 352 Z" fill="#F4EFE4"/>
+  <path d="M158 352 L120 372 L200 470 L200 440 Z" fill="#273244"/>
+  <path d="M242 352 L280 372 L200 470 L200 440 Z" fill="#273244"/>
+  <!-- neck -->
+  <path d="M168 300 L168 360 C180 384 220 384 232 360 L232 300 Z" fill="#8F5A3A"/>
+  <path d="M168 330 C184 352 216 352 232 330 L232 300 L168 300 Z" fill="#000" opacity=".14"/>
+  <!-- ears + earrings -->
+  <ellipse cx="139" cy="244" rx="10" ry="16" fill="#9C6544"/>
+  <ellipse cx="261" cy="244" rx="10" ry="16" fill="#9C6544"/>
+  <circle cx="139" cy="266" r="5" fill="#D97706"/>
+  <circle cx="261" cy="266" r="5" fill="#D97706"/>
+  <!-- head -->
+  <ellipse cx="200" cy="236" rx="62" ry="78" fill="#A86E4A"/>
+  <path d="M138 240 C142 300 170 314 200 314 C230 314 258 300 262 240 C258 280 236 296 200 296 C164 296 142 280 138 240 Z" fill="#000" opacity=".10"/>
+  <!-- hairline -->
+  <path d="M136 232 C128 150 170 118 202 118 C242 118 276 150 264 232 C258 188 236 170 200 170 C164 170 142 190 136 232 Z" fill="#1C1410"/>
+  <rect width="400" height="500" fill="url(#light)"/>
+</svg>

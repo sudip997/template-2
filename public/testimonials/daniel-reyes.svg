@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 500" role="img" aria-label="Illustrated portrait">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E4E1D6"/>
+      <stop offset="1" stop-color="#CFCABA"/>
+    </linearGradient>
+    <linearGradient id="light" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".28"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".12"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="500" fill="url(#bg)"/>
+  <circle cx="110" cy="140" r="140" fill="#fff" opacity=".24"/>
+  <!-- shoulders / knit sweater -->
+  <path d="M24 500 C24 408 100 356 200 356 C300 356 376 408 376 500 Z" fill="#5F6B4E"/>
+  <path d="M150 356 C160 392 240 392 250 356 C240 366 160 366 150 356 Z" fill="#4A553C"/>
+  <path d="M60 470 C120 440 280 440 340 470" fill="none" stroke="#000" stroke-opacity=".08" stroke-width="3"/>
+  <!-- neck -->
+  <path d="M170 304 L170 362 C182 384 218 384 230 362 L230 304 Z" fill="#C98F69"/>
+  <path d="M170 332 C184 352 216 352 230 332 L230 304 L170 304 Z" fill="#000" opacity=".14"/>
+  <!-- ears -->
+  <ellipse cx="140" cy="240" rx="10" ry="16" fill="#D49A73"/>
+  <ellipse cx="260" cy="240" rx="10" ry="16" fill="#D49A73"/>
+  <!-- head -->
+  <ellipse cx="200" cy="232" rx="62" ry="78" fill="#DCA47D"/>
+  <!-- beard -->
+  <path d="M139 246 C140 306 166 322 200 322 C234 322 260 306 261 246 C256 270 244 280 232 280 C220 272 180 272 168 280 C156 280 144 270 139 246 Z" fill="#3A2A20"/>
+  <path d="M184 288 C192 294 208 294 216 288" fill="none" stroke="#C98F69" stroke-width="5" stroke-linecap="round"/>
+  <!-- hair -->
+  <path d="M137 228 C128 148 168 118 204 118 C246 118 274 148 264 228 C262 188 244 166 214 160 C190 176 152 178 137 228 Z" fill="#3A2A20"/>
+  <rect width="400" height="500" fill="url(#light)"/>
+</svg>
