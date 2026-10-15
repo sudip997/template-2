@@ -25,7 +25,7 @@ const content = {
     cta: { label: "Contact support", href: "#" },
   },
   /** Which question is open on first load. Use `null` to start with all closed. */
-  defaultOpenId: "free-trial" as string | null,
+  defaultOpenId: null,
 } as const;
 
 const faqs: FaqEntry[] = [
@@ -86,10 +86,7 @@ export function Faq({ className }: { className?: string }) {
       <section
         id="faq"
         aria-labelledby="faq-heading"
-        className={cn(
-          "scroll-mt-20 border-t py-20 sm:py-24 lg:py-28",
-          className,
-        )}
+        className={cn("scroll-mt-20 py-20 sm:py-24 lg:py-28", className)}
       >
         <Container>
           {/*
