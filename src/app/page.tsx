@@ -1,4 +1,5 @@
 import { Bento } from "@/components/bento/bento";
+import { Cta } from "@/components/cta/cta";
 import { Faq } from "@/components/faq/faq";
 import { Features } from "@/components/features/features";
 import { Hero } from "@/components/hero/hero";
@@ -21,6 +22,7 @@ export default function Home() {
         <Testimonials />
         <Pricing />
         <Faq />
+        <Cta />
       </main>
     </>
   );
