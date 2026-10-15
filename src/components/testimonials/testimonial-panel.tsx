@@ -91,7 +91,7 @@ export function TestimonialPanel({
         {/* Quote */}
         <blockquote className="col-span-2 row-start-1 lg:col-span-7 lg:col-start-6 lg:pb-12 xl:pb-16">
           <QuoteMark className="mb-6 h-6 w-auto text-highlight lg:mb-8 lg:h-8" />
-          <p className="font-heading text-2xl leading-[1.3] font-medium tracking-tight text-balance sm:text-3xl lg:text-[2rem] xl:text-4xl xl:leading-[1.25]">
+          <p className="font-heading text-2xl leading-[1.3] font-medium tracking-tight text-balance sm:text-3xl text-muted-foreground">
             <QuoteText text={quote} highlight={highlight} />
           </p>
         </blockquote>
@@ -128,7 +128,8 @@ export function TestimonialPanel({
             {name}
           </p>
           <p className="mt-1 text-sm leading-snug text-muted-foreground lg:text-base">
-            {role}, <span className="font-medium text-foreground">{company}</span>
+            {role},{" "}
+            <span className="font-medium text-foreground">{company}</span>
           </p>
         </figcaption>
 
