@@ -2,6 +2,7 @@ import { Bento } from "@/components/bento/bento";
 import { Cta } from "@/components/cta/cta";
 import { Faq } from "@/components/faq/faq";
 import { Features } from "@/components/features/features";
+import { Footer } from "@/components/footer/footer";
 import { Hero } from "@/components/hero/hero";
 import { HowItWorks } from "@/components/how-it-works/how-it-works";
 import { LogoCloud } from "@/components/logo-cloud/logo-cloud";
@@ -24,6 +25,7 @@ export default function Home() {
         <Faq />
         <Cta />
       </main>
+      <Footer />
     </>
   );
 }
